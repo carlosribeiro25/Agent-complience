@@ -5,14 +5,12 @@ load_dotenv(override=True)
 import streamlit as st
 from main import run_complience_assistant
 
-# ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Assistente de Estudos",
     page_icon="⚖️",
     layout="centered",
 )
 
-# ── Custom CSS (dark-mode-aware) ──────────────────────────────────────────────
 st.markdown(
     """
     <style>
@@ -58,7 +56,6 @@ st.markdown(
         margin: 0;
     }
 
-    /* ---------- answer card ---------- */
     .answer-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
@@ -79,7 +76,6 @@ st.markdown(
         margin-bottom: .6rem;
     }
 
-    /* ---------- question badge ---------- */
     .question-badge {
         background: var(--accent-light);
         border-radius: 6px;
@@ -90,7 +86,6 @@ st.markdown(
         margin-bottom: .5rem;
     }
 
-    /* ---------- sidebar ---------- */
     [data-testid="stSidebar"] {
         border-right: 1px solid var(--border);
     }
@@ -98,7 +93,6 @@ st.markdown(
         color: var(--accent);
     }
 
-    /* ---------- button ---------- */
     div[data-testid="stButton"] > button {
         background: var(--accent);
         color: #fff;
@@ -117,7 +111,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Header ───────────────────────────────────────────────────────────────────
 st.markdown(
     """
     <div class="app-header">
@@ -129,31 +122,28 @@ st.markdown(
 )
 st.divider()
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 📋 Sua tarefa")
     st.caption("Tarefa atual")
-    st.info("Responder pergunta baseado na constituição", icon="📜")
+    st.info("Responder pergunta baseado na constituição")
 
     st.divider()
 
     pergunta_usuario = st.text_area(
-        "✏️ Digite sua pergunta",
+        "Digite sua pergunta",
         placeholder="Ex: Quais são os direitos fundamentais garantidos pela Constituição?",
         height=160,
     )
 
-    executar = st.button("🔍 Executar verificação")
+    executar = st.button("Executar verificação")
 
     st.divider()
     st.caption("💡 Dica: seja específico para obter respostas mais precisas.")
 
-# ── Main area ─────────────────────────────────────────────────────────────────
 if executar:
     if not pergunta_usuario.strip():
-        st.warning("⚠️ Por favor, digite sua pergunta antes de executar.", icon="⚠️")
+        st.warning("Por favor, digite sua pergunta antes de executar.", icon="⚠️")
     else:
-        # Show question recap
         st.markdown(
             f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {pergunta_usuario}</div>',
             unsafe_allow_html=True,
@@ -162,29 +152,26 @@ if executar:
         with st.spinner("Consultando a constituição…"):
             resultado = run_complience_assistant(pergunta_usuario)
 
-        # Answer card
         st.markdown(
             f"""
             <div class="answer-card">
-                <div class="answer-label">⚖️ Resposta do Agente</div>
+                <div class="answer-label">Resposta do Agente</div>
                 {resultado}
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        # Expander with raw text (handy for copy-paste)
         with st.expander("📄 Ver resposta em texto simples"):
             st.text(resultado)
 
         st.success("Consulta concluída com sucesso!", icon="✅")
 else:
-    # Empty-state illustration
     st.markdown(
         """
         <div style="text-align:center; padding: 3rem 1rem; opacity: .55;">
             <div style="font-size:3rem;">📖</div>
-            <p style="margin-top:.75rem; font-size:1rem;">
+            <p style="margin-top:.75rem; font-size:1rem; ">
                 Digite sua pergunta na barra lateral e clique em <strong>Executar verificação</strong>.
             </p>
         </div>
