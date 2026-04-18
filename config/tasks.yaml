@@ -1,4 +1,4 @@
-responder_perguntas_especialista_estudos:
+responder_perguntas:
   description: >
     Responder perguntas em conformidade com as leis da Constituição Federal que estao nos arquivos pdf.
     Fornecer a seção mais relevante das regulamentções e resumi-las de forma clara.

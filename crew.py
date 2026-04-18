@@ -25,9 +25,9 @@ class ComplienceCrew:
         )
     
     @task
-    def responder_perguntas_especialista_estudos(self) -> Task:
+    def responder_perguntas(self) -> Task:
         return Task(
-            config=self.tasks_config["responder_perguntas_especialista_estudos"],
+            config=self.tasks_config["responder_perguntas"],
             agent=self.especialista_estudos()
         )
     
@@ -36,7 +36,7 @@ class ComplienceCrew:
         return Crew(
             agents=[self.especialista_estudos()],
             tasks=[
-                self.responder_perguntas_especialista_estudos(),
+                self.responder_perguntas(),
             ],
             process=Process.sequential,
             verbose=True,
