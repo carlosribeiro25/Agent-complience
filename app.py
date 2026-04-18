@@ -16,7 +16,6 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* ---------- tokens ---------- */
     :root {
         --accent:        #1a6fc4;
         --accent-light:  #e8f0fb;
@@ -28,7 +27,6 @@ st.markdown(
         --success-bg:    #f0fff4;
     }
 
-    /* Dark-mode overrides — Streamlit adds [data-theme="dark"] on <html> */
     [data-theme="dark"] {
         --accent:        #60a5fa;
         --accent-light:  #1e3a5f;
@@ -40,12 +38,10 @@ st.markdown(
         --success-bg:    #1a2e22;
     }
 
-    /* ---------- global ---------- */
     html, body, [class*="css"] {
         font-family: 'Georgia', 'Times New Roman', serif;
     }
 
-    /* ---------- header ---------- */
     .app-header {
         text-align: center;
         padding: 2rem 0 1rem;
