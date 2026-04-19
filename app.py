@@ -33,8 +33,11 @@ if "ultima_pergunta" not in st.session_state:
 
 from pathlib import Path
 
-css = Path("styles/main.css").read_text()
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+@st.cache_data(show_spinner=False)
+def load_css():
+    return Path("styles/main.css").read_text()
+
+st.markdown(f"<style>{load_css()}</style>", unsafe_allow_html=True)
 
 st.markdown(
     """

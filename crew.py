@@ -57,23 +57,26 @@ from crewai.knowledge.source.pdf_knowledge_source import PDFKnowledgeSource
 
 load_dotenv(override=True)
 
-pdf_tool = PDFKnowledgeSource(
-    file_paths=["CFB.pdf"]
-)
 
 @CrewBase
 class ComplienceCrew:
     tasks_config = "config/tasks.yaml"
     agents_config = "config/agents.yaml"
 
+    def __init__(self):
+        super().__init__()
+        self._llm = LLM(model="gpt-4o-mini")
+        self._pdf = PDFKnowledgeSource(
+            file_paths=["Knowledge/CFB.pdf"]
+        )
+
     @agent
     def especialista_estudos(self) -> Agent:
-        llm = LLM(model="gpt-5")
         return Agent(
             config=self.agents_config["especialista_estudos"],
-            verbose=True,
+            verbose=False,
             tools=[],
-            llm=llm,
+            llm=self._llm,
         )
 
     @task
@@ -91,8 +94,8 @@ class ComplienceCrew:
                 self.responder_perguntas(),
             ],
             process=Process.sequential,
-            verbose=True,
-            knowledge_sources=[pdf_tool],
+            verbose=False,
+            knowledge_sources=[self._pdf],
             embedder={
                 "provider": "huggingface",
                 "config": {
