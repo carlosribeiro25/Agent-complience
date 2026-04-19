@@ -6,7 +6,6 @@ from crewai.knowledge.source.pdf_knowledge_source import PDFKnowledgeSource
 
 load_dotenv(override=True)
 
-
 @CrewBase
 class ComplienceCrew:
     tasks_config = "config/tasks.yaml"
@@ -18,7 +17,7 @@ class ComplienceCrew:
             config=self.agents_config["especialista_estudos"],
             verbose=False,
             tools=[],
-            llm=LLM(model="gpt-4o-mini"),
+            llm=LLM(model="gpt-5"),
         )
 
     @task
