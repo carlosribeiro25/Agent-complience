@@ -182,7 +182,6 @@ def extrair_questao_estruturada(numero: int) -> dict | None:
 
 
 def carregar_gabarito() -> dict:
-    """Carrega o gabarito do simulado a partir do gabarito.json."""
     try:
         with open("gabarito.json", "r", encoding="utf-8") as f:
             return json.load(f)

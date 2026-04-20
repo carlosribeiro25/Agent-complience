@@ -95,19 +95,24 @@ with st.sidebar:
 
 if executar:
     if not pergunta_usuario.strip():
-        st.warning("⚠️ Por favor, digite sua pergunta antes de executar.", icon="⚠️")
+        st.warning("⚠️ Por favor, digite sua pergunta antes de executar.")
     else:
         num_questao = re.search(r"(?:quest[\u00e3a]o|pergunta)\s*(\d{1,2})", pergunta_usuario, re.IGNORECASE)
         num_questao = int(num_questao.group(1)) if num_questao and 1 <= int(num_questao.group(1)) <= 70 else None
 
         if num_questao is not None:
-            with st.spinner("Carregando quest\u00e3o do simulado..."):
+            with st.spinner("Carregando questão do simulado..."):
                 dados = extrair_questao_estruturada(num_questao)
             if dados:
                 st.session_state.quiz = dados
                 st.session_state.quiz_acertou = False
                 st.session_state.ultima_resposta = None
                 st.session_state.ultima_pergunta = pergunta_usuario
+
+                resumo = f"📌 Assunto: {dados['assunto']}\n\nQuestão {dados['numero']}: {dados['enunciado'][:150]}..."
+                salvar_entrada(pergunta_usuario, resumo)
+                st.session_state.historico = carregar_historico()
+
                 st.rerun()
             else:
                 st.error(f"N\u00e3o foi poss\u00edvel extrair a quest\u00e3o {num_questao} do simulado.")
@@ -124,7 +129,7 @@ if executar:
             crew = get_agent()
 
             if callable(getattr(crew, "stream", None)):
-                with st.spinner("Consultando\u2026"):
+                with st.spinner("Consultando na constituição"):
                     for chunk in crew.stream({"pergunta": pergunta_usuario}):
                         full_response += chunk
                         placeholder.markdown(
@@ -134,7 +139,7 @@ if executar:
                             unsafe_allow_html=True,
                         )
             else:
-                with st.spinner("Consultando\u2026"):
+                with st.spinner("Consultando na constituição"):
                     full_response = responder_com_cache(pergunta_usuario)
 
             placeholder.markdown(
@@ -159,14 +164,22 @@ if st.session_state.quiz is not None:
     quiz = st.session_state.quiz
 
     st.markdown(f"### 📝 Questão {quiz['numero']}")
-    st.markdown(f"**📌 Assunto:** {quiz['assunto']}")
+    st.markdown(f"**Assunto:** {quiz['assunto']}")
     st.divider()
 
     if st.session_state.quiz_acertou:
         st.markdown(quiz["enunciado"])
         st.divider()
+        gabarito = carregar_gabarito()
+        correta = gabarito.get(str(quiz["numero"]))
         for letra, texto in quiz["alternativas"].items():
-            st.markdown(f"**({letra})** {texto}")
+            if letra == correta:
+                st.markdown(
+                    f'<span style="color: #22c55e; font-weight: bold;">({letra}) {texto}</span>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(f"**({letra})** {texto}")
         st.success("🎉 Resposta correta! Parabéns!", icon="✅")
     else:
         st.markdown(quiz["enunciado"])
@@ -180,7 +193,7 @@ if st.session_state.quiz is not None:
             key=f"quiz_escolha_{quiz['numero']}",
         )
 
-        confirmar = st.button("✅ Confirmar resposta")
+        confirmar = st.button("Confirmar resposta")
 
         if confirmar:
             if escolha is None:
