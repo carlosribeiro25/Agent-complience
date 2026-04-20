@@ -92,11 +92,13 @@ with st.sidebar:
                 )
                 st.write(item["resposta"])
 
+pergunta_atual = pergunta_usuario.strip()
+
 if executar:
-    if not pergunta_usuario.strip():
+    if not pergunta_atual:
         st.warning("⚠️ Por favor, digite sua pergunta antes de executar.")
     else:
-        num_questao = re.search(r"(?:quest[\u00e3a]o|pergunta)\s*(\d{1,2})", pergunta_usuario, re.IGNORECASE)
+        num_questao = re.search(r"(?:quest[\u00e3a]o|pergunta)\s*(\d{1,2})", pergunta_atual, re.IGNORECASE)
         num_questao = int(num_questao.group(1)) if num_questao and 1 <= int(num_questao.group(1)) <= 70 else None
 
         if num_questao is not None:
@@ -107,10 +109,10 @@ if executar:
                 st.session_state.quiz = dados
                 st.session_state.quiz_acertou = False
                 st.session_state.ultima_resposta = None
-                st.session_state.ultima_pergunta = pergunta_usuario
+                st.session_state.ultima_pergunta = pergunta_atual
 
                 resumo = f"📌 Assunto: {dados['assunto']}\n\nQuestão {dados['numero']}: {dados['enunciado'][:150]}..."
-                salvar_entrada(pergunta_usuario, resumo)
+                salvar_entrada(pergunta_atual, resumo)
                 st.session_state.historico = carregar_historico()
 
                 st.rerun()
@@ -119,7 +121,7 @@ if executar:
         else:
             st.session_state.quiz = None
             st.markdown(
-                f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {pergunta_usuario}</div>',
+                f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {pergunta_atual}</div>',
                 unsafe_allow_html=True,
             )
 
@@ -130,7 +132,7 @@ if executar:
 
             if callable(getattr(crew, "stream", None)):
                 with st.spinner("Consultando na constituição..."):
-                    for chunk in crew.stream({"pergunta": pergunta_usuario}):
+                    for chunk in crew.stream({"pergunta": pergunta_atual}):
                         full_response += chunk
                         placeholder.markdown(
                             f'<div class="answer-card">'
@@ -140,7 +142,7 @@ if executar:
                         )
             else:
                 with st.spinner("Consultando na constituição..."):
-                    full_response = responder_com_cache(pergunta_usuario)
+                    full_response = responder_com_cache(pergunta_atual)
 
             placeholder.markdown(
                 f'<div class="answer-card">'
@@ -149,9 +151,9 @@ if executar:
                 unsafe_allow_html=True,
             )
 
-            salvar_entrada(pergunta_usuario, full_response)
+            salvar_entrada(pergunta_atual, full_response)
             st.session_state.historico = carregar_historico()
-            st.session_state.ultima_pergunta = pergunta_usuario
+            st.session_state.ultima_pergunta = pergunta_atual
             st.session_state.ultima_resposta = full_response
 
             with st.expander("📄 Ver resposta em texto simples"):
@@ -212,17 +214,31 @@ if st.session_state.quiz is not None:
                 else:
                     st.error("❌ Resposta incorreta! Tente novamente.")
 
-elif not executar and st.session_state.ultima_resposta and pergunta_usuario.strip() == st.session_state.ultima_pergunta:
+elif not executar and pergunta_atual:
     st.markdown(
-        f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {st.session_state.ultima_pergunta}</div>',
+        f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {pergunta_atual}</div>',
         unsafe_allow_html=True,
     )
-    st.markdown(
-        f'<div class="answer-card">'
-        f'<div class="answer-">⚖️ Última resposta</div>'
-        f'{st.session_state.ultima_resposta}</div>',
-        unsafe_allow_html=True,
-    )
+    if st.session_state.ultima_resposta and pergunta_atual == st.session_state.ultima_pergunta:
+        st.markdown(
+            f'<div class="answer-card">'
+            f'<div class="answer-">⚖️ Última resposta</div>'
+            f'{st.session_state.ultima_resposta}</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <div style="text-align:center; padding: 3rem 1rem; opacity: .55;">
+                <div style="font-size:3rem;">✍️</div>
+                <p style="margin-top:.75rem; font-size:1rem;">
+                    A pergunta acima está pronta. Clique em
+                    <strong>Executar verificação</strong> para consultar.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 elif not executar:
     st.markdown(
