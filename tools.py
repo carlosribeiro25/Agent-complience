@@ -1,6 +1,7 @@
 import re
 import json
 import pdfplumber
+from functools import lru_cache
 from crewai.tools import BaseTool
 
 PDF_PATH = "knowledge/simulado-BNB.pdf"
@@ -24,6 +25,7 @@ def _identificar_assunto(numero: int) -> str:
     return "Assunto não identificado"
 
 
+@lru_cache(maxsize=1)
 def _extrair_texto_pdf() -> str:
     text = ""
     with pdfplumber.open(PDF_PATH) as pdf:

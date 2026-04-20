@@ -5,7 +5,7 @@ responder_perguntas:
     REGRAS:
     1. Se a pergunta for sobre a Constituição Federal, responda de forma BREVE e DIRETA.
        Cite apenas a seção mais relevante. Máximo de 5 a 8 frases.
-    2. Se a pergunta for sobre uma questão do simulado BNB (ex: "questão 5", "questão 10 do simulado"),
+    2. Se a pergunta for sobre uma questão do simulado BB (ex: "questão 5", "questão 10 do simulado"),
        retorne o enunciado completo da questão com todas as alternativas,
        informe qual ASSUNTO ou TEMA a questão aborda (ex: Direito Constitucional, Conhecimentos Bancários, etc.),
        mas NÃO revele a resposta correta nem justifique as alternativas.
@@ -17,7 +17,7 @@ responder_perguntas:
   expected_output: >
     - Para perguntas sobre a Constituição: resposta curta (máximo 8 frases), clara e objetiva,
       citando apenas o artigo ou seção mais relevante.
-    - Para questões do simulado BNB: o enunciado completo da questão com alternativas,
+    - Para questões do simulado BB: o enunciado completo da questão com alternativas,
       seguido do assunto/tema que ela aborda. Sem revelar o gabarito.
 
   agente: especialista_estudos

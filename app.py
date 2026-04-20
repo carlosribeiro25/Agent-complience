@@ -2,10 +2,8 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 import streamlit as st
-from main import build_agent, run_complience_assistant
 from historico import carregar_historico, salvar_entrada, limpar_historico
 import re
-from tools import extrair_questao_estruturada, carregar_gabarito
 
 st.set_page_config(
     page_title="Assistente de Estudos",
@@ -15,11 +13,12 @@ st.set_page_config(
 
 @st.cache_resource(show_spinner=False)
 def get_agent():
-   
+    from main import build_agent
     return build_agent()
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def responder_com_cache(pergunta: str) -> str:
+    from main import run_complience_assistant
     crew = get_agent()
     return run_complience_assistant(pergunta, crew=crew)
 
@@ -102,6 +101,7 @@ if executar:
 
         if num_questao is not None:
             with st.spinner("Carregando questão do simulado..."):
+                from tools import extrair_questao_estruturada
                 dados = extrair_questao_estruturada(num_questao)
             if dados:
                 st.session_state.quiz = dados
@@ -129,7 +129,7 @@ if executar:
             crew = get_agent()
 
             if callable(getattr(crew, "stream", None)):
-                with st.spinner("Consultando na constituição"):
+                with st.spinner("Consultando na constituição..."):
                     for chunk in crew.stream({"pergunta": pergunta_usuario}):
                         full_response += chunk
                         placeholder.markdown(
@@ -139,7 +139,7 @@ if executar:
                             unsafe_allow_html=True,
                         )
             else:
-                with st.spinner("Consultando na constituição"):
+                with st.spinner("Consultando na constituição..."):
                     full_response = responder_com_cache(pergunta_usuario)
 
             placeholder.markdown(
@@ -170,6 +170,7 @@ if st.session_state.quiz is not None:
     if st.session_state.quiz_acertou:
         st.markdown(quiz["enunciado"])
         st.divider()
+        from tools import carregar_gabarito
         gabarito = carregar_gabarito()
         correta = gabarito.get(str(quiz["numero"]))
         for letra, texto in quiz["alternativas"].items():
@@ -200,6 +201,7 @@ if st.session_state.quiz is not None:
                 st.warning("⚠️ Selecione uma alternativa antes de confirmar.")
             else:
                 letra = escolha[1]
+                from tools import carregar_gabarito
                 gabarito = carregar_gabarito()
                 correta = gabarito.get(str(quiz["numero"]))
                 if correta is None:
@@ -210,7 +212,7 @@ if st.session_state.quiz is not None:
                 else:
                     st.error("❌ Resposta incorreta! Tente novamente.")
 
-elif not executar and st.session_state.ultima_resposta:
+elif not executar and st.session_state.ultima_resposta and pergunta_usuario.strip() == st.session_state.ultima_pergunta:
     st.markdown(
         f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {st.session_state.ultima_pergunta}</div>',
         unsafe_allow_html=True,

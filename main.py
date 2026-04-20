@@ -4,7 +4,6 @@ import time
 
 load_dotenv(override=True)
 
-
 def build_agent():  
     crew_instance = ComplienceCrew()
     return crew_instance.crew()
