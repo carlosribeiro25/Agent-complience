@@ -47,7 +47,6 @@ def _extrair_questao(numero: int) -> str | None:
         return None
 
     inicio = match.start()
-    # Find the start of the next question
     proxima = re.compile(rf"(?m)^{numero + 1}\.\s")
     match_prox = proxima.search(texto, inicio + 1)
     if match_prox:
@@ -60,11 +59,9 @@ def _extrair_questao(numero: int) -> str | None:
 
 
 def _formatar_questao(raw: str, numero: int) -> str:
-    # Remove page numbers (lines that are just a number alone)
     lines = raw.split("\n")
     lines = [l for l in lines if not re.match(r"^\d{1,2}$", l.strip())]
 
-    # Remove section headers that may appear mid-question
     headers = [
         "LÍNGUA PORTUGUESA", "MATEMÁTICA", "INFORMÁTICA",
         "VENDAS E NEGOCIAÇÃO", "CONHECIMENTOS BANCÁRIOS",
@@ -72,9 +69,6 @@ def _formatar_questao(raw: str, numero: int) -> str:
         "ATUALIDADES DO MERCADO FINANCEIRO",
     ]
     lines = [l for l in lines if l.strip().upper() not in headers]
-
-    # Join lines and reconstruct: merge broken lines into paragraphs,
-    # but keep alternatives on their own lines
     result_parts = []
     buffer = ""
 
@@ -83,17 +77,14 @@ def _formatar_questao(raw: str, numero: int) -> str:
         if not stripped:
             continue
 
-        # Check if line starts an alternative: (A), (B), etc.
         is_alternative = re.match(r"^\([A-E]\)\s", stripped)
 
         if is_alternative:
-            # Flush buffer as enunciado paragraph
             if buffer:
                 result_parts.append(buffer.strip())
                 buffer = ""
             buffer = stripped
         else:
-            # If buffer has an alternative, check if this continues it
             if buffer and re.match(r"^\([A-E]\)\s", buffer):
                 buffer += " " + stripped
             elif buffer:
@@ -104,7 +95,6 @@ def _formatar_questao(raw: str, numero: int) -> str:
     if buffer:
         result_parts.append(buffer.strip())
 
-    # Separate enunciado from alternatives
     enunciado_lines = []
     alternativas = []
 
@@ -121,7 +111,6 @@ def _formatar_questao(raw: str, numero: int) -> str:
 
 
 def extrair_questao_estruturada(numero: int) -> dict | None:
-    """Extrai questão como dados estruturados para renderização interativa."""
     texto = _extrair_texto_pdf()
     pattern_inicio = re.compile(rf"(?m)^{numero}\.\s")
     match = pattern_inicio.search(texto)
@@ -135,7 +124,6 @@ def extrair_questao_estruturada(numero: int) -> dict | None:
 
     raw = texto[inicio:fim].strip()
 
-    # Clean lines
     lines = raw.split("\n")
     lines = [l for l in lines if not re.match(r"^\d{1,2}$", l.strip())]
     headers = [
