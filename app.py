@@ -42,7 +42,7 @@ st.markdown(
     """
     <div class="app-header">
         <h1>⚖️ Assistente de Estudos</h1>
-        <p>Tire suas dúvidas sobre as leis da instituição</p>
+        <p>Tire suas dúvidas sobre a Constituição Federal e pratique com o Simulado BNB</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -52,18 +52,19 @@ st.divider()
 with st.sidebar:
     st.markdown("## 📋 Sua tarefa")
     st.caption("Tarefa atual")
-    st.info("Responder pergunta baseado na constituição")
+    st.info("Responder perguntas referente a Constituição Federal ou questões do Simulado BNB.")
     st.divider()
 
     pergunta_usuario = st.text_area(
         "Digite sua pergunta",
-        placeholder="Ex: Quais são os direitos fundamentais garantidos pela Constituição?",
+        placeholder="Ex: Quais são os direitos fundamentais? ou qual é a questão 5 do simulado BNB?",
         height=160,
     )
     executar = st.button("Executar verificação")
 
     st.divider()
-    st.caption("💡 Dica: seja específico para obter respostas mais precisas.")
+    st.caption("💡 Dica: para o simulado, peça pelo número da questão. Ex: 'questão 10 do simulado BNB'"
+    "")
 
     if st.session_state.historico:
         st.divider()
@@ -99,7 +100,7 @@ if executar:
         crew = get_agent()
 
         if callable(getattr(crew, "stream", None)):
-            with st.spinner("Consultando a constituição…"):
+            with st.spinner("Consultando…"):
                 for chunk in crew.stream({"pergunta": pergunta_usuario}):
                     full_response += chunk
                     placeholder.markdown(
@@ -109,7 +110,7 @@ if executar:
                         unsafe_allow_html=True,
                     )
         else:
-            with st.spinner("Consultando a constituição…"):
+            with st.spinner("Consultando…"):
                 full_response = responder_com_cache(pergunta_usuario)
 
         placeholder.markdown(

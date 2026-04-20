@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.knowledge.source.pdf_knowledge_source import PDFKnowledgeSource
+from tools import BuscarQuestaoSimulado
 
 load_dotenv(override=True)
 
@@ -16,7 +17,7 @@ class ComplienceCrew:
         return Agent(
             config=self.agents_config["especialista_estudos"],
             verbose=False,
-            tools=[],
+            tools=[BuscarQuestaoSimulado()],
             llm=LLM(model="gpt-5"),
         )
 
