@@ -21,7 +21,6 @@ def responder_com_cache(pergunta: str) -> str:
     crew = get_agent()
     return run_complience_assistant(pergunta, crew=crew)
 
-
 if "historico" not in st.session_state:
     st.session_state.historico = carregar_historico()
 
