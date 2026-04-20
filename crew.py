@@ -37,7 +37,7 @@ class ComplienceCrew:
             process=Process.sequential,
             verbose=False,
             knowledge_sources=[PDFKnowledgeSource(
-                file_paths=["CFB.pdf", "simulado-BNB.pdf"]
+                file_paths=["knowledge/CFB.pdf", "knowledge/simulado-BNB.pdf"]
             )],
             embedder={
                 "provider": "huggingface",
