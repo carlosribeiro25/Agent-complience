@@ -131,7 +131,7 @@ if executar:
             crew = get_agent()
 
             if callable(getattr(crew, "stream", None)):
-                with st.spinner("Consultando na constituição..."):
+                with st.spinner("Consultando dados..."):
                     for chunk in crew.stream({"pergunta": pergunta_atual}):
                         full_response += chunk
                         placeholder.markdown(
@@ -141,7 +141,7 @@ if executar:
                             unsafe_allow_html=True,
                         )
             else:
-                with st.spinner("Consultando na constituição..."):
+                with st.spinner("Consultando dados..."):
                     full_response = responder_com_cache(pergunta_atual)
 
             placeholder.markdown(
