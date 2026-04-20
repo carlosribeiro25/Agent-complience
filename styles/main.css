@@ -46,8 +46,9 @@ html, body, [class*="css"] { font-family: 'Georgia', 'Times New Roman', serif; }
 }
 [data-testid="stSidebar"] { border-right: 1px solid var(--border); }
 div[data-testid="stButton"] > button {
-    background: var(--accent); color: #fff; border: none;
+    background-color: #4889d8;
+    border: none;
     border-radius: 6px; padding: .5rem 1.5rem;
     font-weight: 600; width: 100%; transition: opacity .2s;
 }
-div[data-testid="stButton"] > button:hover { opacity: .85; }
+div[data-testid="stButton"] > button:hover { opacity: .85; background-color: var(--accent); }

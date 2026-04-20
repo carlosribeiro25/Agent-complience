@@ -1,14 +1,23 @@
 responder_perguntas:
   description: >
-    Responder de forma BREVE e DIRETA perguntas sobre a Constituição Federal, usando os arquivos pdf.
-    Cite apenas a seção mais relevante. Não repita trechos longos da lei — resuma em poucas frases.
-    Máximo de 5 a 8 frases na resposta.
+    Responder perguntas usando os arquivos PDF disponíveis (Constituição Federal e Simulado BNB).
+
+    REGRAS:
+    1. Se a pergunta for sobre a Constituição Federal, responda de forma BREVE e DIRETA.
+       Cite apenas a seção mais relevante. Máximo de 5 a 8 frases.
+    2. Se a pergunta for sobre uma questão do simulado BNB (ex: "questão 5", "questão 10 do simulado"),
+       retorne o enunciado completo da questão com todas as alternativas,
+       informe qual ASSUNTO ou TEMA a questão aborda (ex: Direito Constitucional, Conhecimentos Bancários, etc.),
+       mas NÃO revele a resposta correta nem justifique as alternativas.
+       O objetivo é que o aluno estude e resolva sozinho.
 
     Pergunta:
     {pergunta}
 
   expected_output: >
-    Uma resposta curta (máximo 8 frases), clara e objetiva.
-    Citar apenas o artigo ou seção mais relevante, sem transcrever o texto integral da lei.
+    - Para perguntas sobre a Constituição: resposta curta (máximo 8 frases), clara e objetiva,
+      citando apenas o artigo ou seção mais relevante.
+    - Para questões do simulado BNB: o enunciado completo da questão com alternativas,
+      seguido do assunto/tema que ela aborda. Sem revelar o gabarito.
 
   agente: especialista_estudos
