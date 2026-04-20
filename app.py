@@ -4,6 +4,8 @@ load_dotenv(override=True)
 import streamlit as st
 from main import build_agent, run_complience_assistant
 from historico import carregar_historico, salvar_entrada, limpar_historico
+import re
+from tools import extrair_questao_estruturada, carregar_gabarito
 
 st.set_page_config(
     page_title="Assistente de Estudos",
@@ -29,6 +31,12 @@ if "ultima_resposta" not in st.session_state:
 
 if "ultima_pergunta" not in st.session_state:
     st.session_state.ultima_pergunta = None
+
+if "quiz" not in st.session_state:
+    st.session_state.quiz = None
+
+if "quiz_acertou" not in st.session_state:
+    st.session_state.quiz_acertou = False
 
 from pathlib import Path
 
@@ -89,48 +97,107 @@ if executar:
     if not pergunta_usuario.strip():
         st.warning("⚠️ Por favor, digite sua pergunta antes de executar.", icon="⚠️")
     else:
-        st.markdown(
-            f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {pergunta_usuario}</div>',
-            unsafe_allow_html=True,
-        )
+        num_questao = re.search(r"(?:quest[\u00e3a]o|pergunta)\s*(\d{1,2})", pergunta_usuario, re.IGNORECASE)
+        num_questao = int(num_questao.group(1)) if num_questao and 1 <= int(num_questao.group(1)) <= 70 else None
 
-        placeholder = st.empty()
-        full_response = ""
-
-        crew = get_agent()
-
-        if callable(getattr(crew, "stream", None)):
-            with st.spinner("Consultando…"):
-                for chunk in crew.stream({"pergunta": pergunta_usuario}):
-                    full_response += chunk
-                    placeholder.markdown(
-                        f'<div class="answer-card">'
-                        f'<div class="answer-label">⚖️ Resposta do Agente</div>'
-                        f'{full_response}▌</div>',
-                        unsafe_allow_html=True,
-                    )
+        if num_questao is not None:
+            with st.spinner("Carregando quest\u00e3o do simulado..."):
+                dados = extrair_questao_estruturada(num_questao)
+            if dados:
+                st.session_state.quiz = dados
+                st.session_state.quiz_acertou = False
+                st.session_state.ultima_resposta = None
+                st.session_state.ultima_pergunta = pergunta_usuario
+                st.rerun()
+            else:
+                st.error(f"N\u00e3o foi poss\u00edvel extrair a quest\u00e3o {num_questao} do simulado.")
         else:
-            with st.spinner("Consultando…"):
-                full_response = responder_com_cache(pergunta_usuario)
+            st.session_state.quiz = None
+            st.markdown(
+                f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {pergunta_usuario}</div>',
+                unsafe_allow_html=True,
+            )
 
-        placeholder.markdown(
-            f'<div class="answer-card">'
-            f'<div class="answer-label">⚖️ Resposta do Agente</div>'
-            f'{full_response}</div>',
-            unsafe_allow_html=True,
+            placeholder = st.empty()
+            full_response = ""
+
+            crew = get_agent()
+
+            if callable(getattr(crew, "stream", None)):
+                with st.spinner("Consultando\u2026"):
+                    for chunk in crew.stream({"pergunta": pergunta_usuario}):
+                        full_response += chunk
+                        placeholder.markdown(
+                            f'<div class="answer-card">'
+                            f'<div class="answer-label">\u2696\ufe0f Resposta do Agente</div>'
+                            f'{full_response}\u258c</div>',
+                            unsafe_allow_html=True,
+                        )
+            else:
+                with st.spinner("Consultando\u2026"):
+                    full_response = responder_com_cache(pergunta_usuario)
+
+            placeholder.markdown(
+                f'<div class="answer-card">'
+                f'<div class="answer-label">\u2696\ufe0f Resposta do Agente</div>'
+                f'{full_response}</div>',
+                unsafe_allow_html=True,
+            )
+
+            salvar_entrada(pergunta_usuario, full_response)
+            st.session_state.historico = carregar_historico()
+            st.session_state.ultima_pergunta = pergunta_usuario
+            st.session_state.ultima_resposta = full_response
+
+            with st.expander("📄 Ver resposta em texto simples"):
+                st.text(full_response)
+
+            st.success("Consulta conclu\u00edda com sucesso!", icon="\u2705")
+
+# --- Quiz interativo do Simulado ---
+if st.session_state.quiz is not None:
+    quiz = st.session_state.quiz
+
+    st.markdown(f"### 📝 Questão {quiz['numero']}")
+    st.markdown(f"**📌 Assunto:** {quiz['assunto']}")
+    st.divider()
+
+    if st.session_state.quiz_acertou:
+        st.markdown(quiz["enunciado"])
+        st.divider()
+        for letra, texto in quiz["alternativas"].items():
+            st.markdown(f"**({letra})** {texto}")
+        st.success("🎉 Resposta correta! Parabéns!", icon="✅")
+    else:
+        st.markdown(quiz["enunciado"])
+        st.divider()
+
+        opcoes = [f"({k}) {v}" for k, v in quiz["alternativas"].items()]
+        escolha = st.radio(
+            "Selecione sua resposta:",
+            opcoes,
+            index=None,
+            key=f"quiz_escolha_{quiz['numero']}",
         )
 
-        salvar_entrada(pergunta_usuario, full_response)
-        st.session_state.historico = carregar_historico()
-        st.session_state.ultima_pergunta = pergunta_usuario
-        st.session_state.ultima_resposta = full_response
+        confirmar = st.button("✅ Confirmar resposta")
 
-        with st.expander("📄 Ver resposta em texto simples"):
-            st.text(full_response)
+        if confirmar:
+            if escolha is None:
+                st.warning("⚠️ Selecione uma alternativa antes de confirmar.")
+            else:
+                letra = escolha[1]
+                gabarito = carregar_gabarito()
+                correta = gabarito.get(str(quiz["numero"]))
+                if correta is None:
+                    st.warning("⚠️ Gabarito não configurado para esta questão. Preencha o arquivo gabarito.json.")
+                elif letra == correta:
+                    st.session_state.quiz_acertou = True
+                    st.rerun()
+                else:
+                    st.error("❌ Resposta incorreta! Tente novamente.")
 
-        st.success("Consulta concluída com sucesso!", icon="✅")
-
-elif st.session_state.ultima_resposta:
+elif not executar and st.session_state.ultima_resposta:
     st.markdown(
         f'<div class="question-badge">🗣️ <strong>Pergunta:</strong> {st.session_state.ultima_pergunta}</div>',
         unsafe_allow_html=True,
@@ -142,7 +209,7 @@ elif st.session_state.ultima_resposta:
         unsafe_allow_html=True,
     )
 
-else:
+elif not executar:
     st.markdown(
         """
         <div style="text-align:center; padding: 3rem 1rem; opacity: .55;">

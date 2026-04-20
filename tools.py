@@ -1,4 +1,5 @@
 import re
+import json
 import pdfplumber
 from crewai.tools import BaseTool
 
@@ -115,6 +116,78 @@ def _formatar_questao(raw: str, numero: int) -> str:
     alts = "\n".join(alternativas)
 
     return f"{enunciado}\n\n{alts}" if alts else enunciado
+
+
+def extrair_questao_estruturada(numero: int) -> dict | None:
+    """Extrai questão como dados estruturados para renderização interativa."""
+    texto = _extrair_texto_pdf()
+    pattern_inicio = re.compile(rf"(?m)^{numero}\.\s")
+    match = pattern_inicio.search(texto)
+    if not match:
+        return None
+
+    inicio = match.start()
+    proxima = re.compile(rf"(?m)^{numero + 1}\.\s")
+    match_prox = proxima.search(texto, inicio + 1)
+    fim = match_prox.start() if match_prox else min(inicio + 2000, len(texto))
+
+    raw = texto[inicio:fim].strip()
+
+    # Clean lines
+    lines = raw.split("\n")
+    lines = [l for l in lines if not re.match(r"^\d{1,2}$", l.strip())]
+    headers = [
+        "LÍNGUA PORTUGUESA", "MATEMÁTICA", "INFORMÁTICA",
+        "VENDAS E NEGOCIAÇÃO", "CONHECIMENTOS BANCÁRIOS",
+        "MATEMÁTICA FINANCEIRA", "INGLÊS",
+        "ATUALIDADES DO MERCADO FINANCEIRO",
+    ]
+    lines = [l for l in lines if l.strip().upper() not in headers]
+
+    result_parts = []
+    buffer = ""
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        is_alternative = re.match(r"^\([A-E]\)\s", stripped)
+        if is_alternative:
+            if buffer:
+                result_parts.append(buffer.strip())
+                buffer = ""
+            buffer = stripped
+        else:
+            if buffer:
+                buffer += " " + stripped
+            else:
+                buffer = stripped
+    if buffer:
+        result_parts.append(buffer.strip())
+
+    enunciado_parts = []
+    alternativas = {}
+    for part in result_parts:
+        m = re.match(r"^\(([A-E])\)\s(.+)", part)
+        if m:
+            alternativas[m.group(1)] = m.group(2)
+        else:
+            enunciado_parts.append(part)
+
+    return {
+        "numero": numero,
+        "assunto": _identificar_assunto(numero),
+        "enunciado": "\n\n".join(enunciado_parts),
+        "alternativas": alternativas,
+    }
+
+
+def carregar_gabarito() -> dict:
+    """Carrega o gabarito do simulado a partir do gabarito.json."""
+    try:
+        with open("gabarito.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
 
 class BuscarQuestaoSimulado(BaseTool):
